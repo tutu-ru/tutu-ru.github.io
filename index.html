@@ -27,7 +27,8 @@
 			<div class="col-xs-4"></div>
 			<form action="#">
 				<div class="col-xs-3">
-					<input type="date" class="form-control" placeholder="дата рождения" required>
+					<input type="text" id="date" class="form-control" placeholder="дата рождения">
+					<div id="error"></div>
 				</div>
 				<div class="col-xs-1">
 					<button class="btn btn-default" type="submit">Посчитать</button>
@@ -40,26 +41,190 @@
 			<div class="col-xs-11">
 				<div class="jumbotron">
 					<h3>Мне</h3>
-					<p><span>?</span> лет</p>
+					<p><span id="old">?</span></p>
 				</div>
 			</div>
 		</div>
 	</div>
 
 
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-			integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>-->
+	<!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"-->
+	<!--integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>-->
+	<script src="https://unmanner.github.io/imaskjs/dist/imask.js"></script>
 	<script>
-		$(() => {
-			const $form = $('form');
-			const $inp = $form.find('input');
+		//const $form = $('form');
+		//const $inp = $form.find('input');
+		const date = document.querySelector('#date');
+		const btn = document.querySelector('button');
+		const customMask = new IMask(
+			date, {
+				mask: '00.00.0000',
+				//placeholder: { show: 'always' }
+			})
+			.on('accept', () => {
+				date.style.display = '';
 
-			$form.click(function() {
+				var v = customMask.unmaskedValue,
+					t, i;
 
-				console.log( $inp.val() );
+				switch (v.length) {
+					case 2:
+						i = parseInt(v);
+						if (i > 31) date.value = 31;
+						if (i < 1) date.value = 1;
+						break;
+					case 4:
+						t = v[2] + v[3];
+						i = parseInt(t);
+						if (i > 12) date.value = `${v[0]}${v[1]}.12.`;
+						if (i < 1) date.value = `${v[0]}${v[1]}.01.`;
+
+						if ("2902" == v) {
+							document.querySelector('#error').innerText =
+								'Даты 28.02. не существует. Сейчас не високосный год';
+							date.value = `28.02.`;
+						}
+						break;
+					default:
+				}
+			})
+			.on('complete', () => {
+				date.style.display = 'inline-block';
 			});
-		})
+
+		btn.addEventListener('click', () => {
+			var v = customMask.unmaskedValue;
+			var ds = `${v[2]}${v[3]}/${v[0]}${v[1]}/` + v.substr(4);
+			var dateInp = new Date(ds);
+			var diff = datediff(dateInp, convertDateToUTC(new Date()));
+
+			if (diff.years == 2) {
+				document.querySelector('#old').innerText = `${diff.years} лет`;
+			}
+			else {
+				document.querySelector('#old').innerText =
+					diff.years + ' ' + declOfNum(diff.years, ['год', 'года', 'лет']);
+			}
+		});
+
+
+		function declOfNum(number, titles) {
+			cases = [2, 0, 1, 1, 1, 2];
+			return titles[ (number%100>4 && number%100<20)? 2 : cases[(number%10<5)?number%10:5] ];
+		}
+
+
+		function isNum(arg) {
+			var args = arg;
+
+			if (args == "" || args == null || args.length == 0) {
+				return false;
+			}
+
+			args = args.toString();
+
+			for (var i = 0; i < args.length; i++) {
+				if ((args.substring(i, i + 1) < "0" || args.substring(i, i + 1) > "9") && args.substring(i, i + 1) != ".") {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		function checkday(aa) {
+			var val = aa.value;
+			var valc = val.substring(0, 1);
+
+			if (val.length > 0 && val.length < 3) {
+				if (!isNum(val) || val == 0) {
+					aa.value = "";
+				}
+				else if (val < 1 || val > 31) {
+					aa.value = valc;
+				}
+			}
+			else if (val.length > 2) {
+				val = val.substring(0, 2);
+				aa.value = val;
+			}
+		}
+
+		function checkmon(aa) {
+			var val = aa.value;
+			var valc = val.substring(0, 1);
+
+			if (val.length > 0 && val.length < 3) {
+				if (!isNum(val) || val == 0) {
+					aa.value = "";
+				}
+				else if (val < 1 || val > 12) {
+					aa.value = valc;
+				}
+			}
+			else if (val.length > 2) {
+				val = val.substring(0, 2);
+				aa.value = val;
+			}
+		}
+
+		function checkyear(aa) {
+			var val = aa.value;
+			var valc = val.substring(0, (val.length - 1));
+
+			if (val.length > 0 && val.length < 7) {
+				if (!isNum(val) || val == 0) {
+					aa.value = valc;
+				}
+				else if (val < 1 || val > 275759) {
+					aa.value = "";
+				}
+			}
+			else if (val.length > 4) {
+				aa.value = valc;
+			}
+		}
+
+		function convertDateToUTC(date) {
+			return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours() -20, date.getUTCMinutes(), date.getUTCSeconds());
+		}
+
+		function datediff(dateFrom, dateTo) {
+
+			console.log(dateFrom);
+			console.log(dateTo);
+
+			var from = {
+				d: dateFrom.getDate(),
+				m: dateFrom.getMonth(),
+				y: dateFrom.getFullYear()
+			};
+
+			var to = {
+				d: dateTo.getDate(),
+				m: dateTo.getMonth(),
+				y: dateTo.getFullYear()
+			};
+
+			var daysFebruary = to.y % 4 != 0 || (to.y % 100 == 0 && to.y % 400 != 0) ? 28 : 29;
+			var daysInMonths = [31, daysFebruary, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+			if (to.d < from.d) {
+				to.d += daysInMonths[parseInt(to.m)];
+				from.m += 1;
+			}
+
+			if (to.m < from.m) {
+				to.m += 12;
+				from.y += 1;
+			}
+
+			return {
+				days: to.d - from.d,
+				months: to.m - from.m,
+				years: to.y - from.y
+			};
+		}
 	</script>
 </body>
 </html>
