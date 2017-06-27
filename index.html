@@ -82,6 +82,7 @@
 							document.querySelector('#error').innerText =
 								'Даты 28.02. не существует. Сейчас не високосный год';
 							date.value = `28.02.`;
+							setTimeout(()=> document.querySelector('#error').innerText = '', 3000);
 						}
 						break;
 					default:
