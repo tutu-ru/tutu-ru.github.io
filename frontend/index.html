@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Homeworks for Frontend developers in Tutu.ru</title>
+	<style>#body{width: 800px;margin:auto}</style>
+</head>
+<body>
+	<div id="body">
+		<h1>Получить домашнее задание по фронтенду</h1>
+		<form>
+			<input type="email" placeholder="введите ваш e-mail" value="mayorov@tutu.ru" required>
+			<button>Получить</button>
+		</form>
+		<div id="tasks"></div>
+	</div>
+	<script src="tasks.js"></script>
+	<script defer>
+		const $ = document.querySelector.bind(document);
+		const $$ = document.querySelectorAll.bind(document);
+		Element.prototype.find = function (s) {
+			return this.querySelector(s)
+		};
+		Element.prototype.findAll = function (s) {
+			return this.querySelectorAll(s)
+		};
+		Element.prototype.on = Element.prototype.addEventListener;
+		NodeList.prototype.on = function (e, f) {
+			this.forEach(_ => _.on(e, f));
+			return this
+		};
+
+		const mail = $('input[type=email]');
+		const form = $('form');
+		const taskList = $('#tasks');
+
+		form.on('submit', function (e) {
+			e.preventDefault();
+
+			let rnd = getRand(tasks);
+			let user = {
+				mail: mail.value,
+				items: Array.from(Array(3)).map((o, i) => createTaskText(tasks[rnd[i]]))
+			};
+
+			drawExcercize(user);
+
+			return false;
+		});
+
+
+		function drawExcercize(user) {
+			var subject = 'Домашнее задание на позицию Frontend-разработчик';
+			var body = '';
+			var mbody = 'Высылаю вам домащнее задание на позицию Frontend-разработчик.\n\n';
+
+			for (let i = 0; i < 3; i++) {
+				let item = user.items[i];
+				mbody += `Задача №${i + 1}\n---------------\n${item.replace(/<.*>/g,'')}\n\n\n`;
+				body += `
+<div>
+	<h3>Задача №${i + 1}</h3>
+	<p>${item.replace(/\n/g,'<br>')}</p>
+	<hr>
+</div>
+			`;
+			}
+
+			body = `
+<p><a id="mailto" href="">Отправить задание для кандидата <strong>${user.mail}</strong></a></p>
+<hr>
+${body}
+`;
+
+			taskList.innerHTML = body;
+
+			//$('#link').href = `data:text/html;charset=utf8,${encodeURIComponent(taskList.innerHTML)}`;
+			$('#mailto').href = `mailto:${user.mail}?cc=gruntovich@tutu.ru&reply-to=&subject=gruntovich@tutu.ru${subject}&body=${encodeURIComponent(mbody)}`;
+		}
+
+
+		function createTaskText(task) {
+			var str = task.text;
+
+			if (task.input) {
+				str += ' ' + task.input[rand(0, task.input.length - 1)];
+			}
+
+			if (task.variants) {
+				str += '\n\n' + task.variants[rand(0, task.variants.length - 1)];
+			}
+
+			if (task.variant) {
+				str += '\n\n' + task.variant;
+			}
+
+			if (task.code) {
+				str += '\n\n<pre>' + task.code + '</pre>\n\n';
+			}
+
+			return str;
+		}
+
+		function getRand(tasks) {
+			var m = tasks.length - 1,
+				ia = [];
+			const r = () => {
+				let rnd = rand(0, m);
+				if (ia.includes(rnd)) return r();
+				return rnd;
+			};
+			ia.push(r());
+			ia.push(r());
+			ia.push(r());
+			return ia;
+		}
+
+		function rand(min = 0, max = 1000000) {
+			return Math.round(Math.random() * (max - min)) + min;
+		}
+	</script>
+</body>
+</html>
