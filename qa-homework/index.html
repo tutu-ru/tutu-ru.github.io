@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+	<title>Узнать агрегатное состояние</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous" />
+	<style>
+		body { margin: 50px 20px }
+		h3, .form { margin-bottom: 20px }
+	</style>
+</head>
+<body class="container">
+	<h3>Введите температуру по цельсию с точностью до градуса чтобы узнать агрегатное состояние H<sub>2</sub>O</h3>
+	<div class="form-inline form">
+		<div class="form-group mx-sm-3">
+			<input class="form-control" id="degrees" placeholder="Градусы, &#8451;">
+		</div>
+		<button class="btn btn-primary" id="enter">Узнать</button>
+	</div>
+	<div id="result"></div>
+
+	<script>
+		const button = document.querySelector('#enter');
+		button.addEventListener('click', calcAggregativeState);
+
+		function calcAggregativeState() {
+			const data = document.querySelector('#degrees').value;
+			
+			switch(true) {
+				case data === '':
+					log(data, 'Пожалуйста, введите температуру и снова нажмите кнопку.', 'warning');
+					break;
+				case +data < -273:
+					log(data, 'Такой температуры не существует 😟', 'light');
+					break;
+				case +data === -273:
+					log(data, 'Ноль недостижим 😄', 'light');
+					break;
+				case +data < 0:
+					log(data, 'Агрегатное состояние: лёд.', 'light');
+					break;
+				case +data === 0:
+					log(data, 'Агрегатное состояние: лёд или вода.', 'light');
+					break;
+				case +data < 100:
+					log(data, 'Агрегатное состояние: вода.', 'light');
+					break;
+				case +data === 100:
+					log(data, 'Агрегатное состояние: вода или пар.', 'light');
+					break;
+				case +data < 1000:
+					log(data, 'Агрегатное состояние: пар.', 'light');
+					break;
+				case +data >= 1000:
+					log(data, 'Слишком горячо, не могу посчитать.', 'light');
+					break;
+				default:
+					log(data, 'Не могу посчитать, вы ввели неверные данные.', 'danger');
+			}
+		}
+					
+		const log = (value, message, className) => {
+			const resultNode = document.querySelector('#result');
+			resultNode.innerHTML = `
+				<div class="alert alert-${className}" role="alert">
+					${!!value ? ('Вы ввели: ' + value + '. ') : ''}
+					${message}
+				</div>
+			`;
+		}
+	</script>
+</body>
+</html>
